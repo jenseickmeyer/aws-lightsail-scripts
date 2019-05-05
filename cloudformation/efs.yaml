@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  Subnet:
+    Type: AWS::EC2::Subnet::Id
+    Description: Select a subnet in the default VPC
+  SourceCidrIp:
+    Type: String
+    Description: CIDR block of allowed connections
+
+Resources:
+
+  SharedFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      PerformanceMode: generalPurpose
+
+  MountTargetSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '2049'
+          ToPort: '2049'
+          CidrIp:
+            Ref: SourceCidrIp
+
+  MountTarget:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId:
+        Ref: SharedFileSystem
+      SubnetId:
+        Ref: Subnet
+      SecurityGroups:
+        - Ref: MountTargetSecurityGroup
