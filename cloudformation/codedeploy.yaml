@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  BucketName:
+    Type: String
+    Description: The name of the S3 Bucket in which the deployment artifacts will be stored
+  ApplicationName:
+    Type: String
+    Description: The name of the application which will be deployt
+  DeploymentGroupName:
+    Type: String
+    Description: The name of the Deployment Group
+    Default: web-servers
+
+Resources:
+
+  DeploymentArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: BucketName
+      VersioningConfiguration:
+        Status: Enabled
+
+  Application:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName:
+        Ref: ApplicationName
+      ComputePlatform: Server
+
+  DeploymentGroup:
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties:
+      DeploymentGroupName:
+        Ref: DeploymentGroupName
+      ApplicationName:
+        Ref: ApplicationName
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      DeploymentConfigName: CodeDeployDefault.OneAtATime
+      OnPremisesInstanceTagFilters:
+        - Key: Stage
+          Value: dev
+          Type: KEY_AND_VALUE
+      ServiceRoleArn:
+        Fn::GetAtt: CodeDeployServiceRole.Arn
+
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+
+  LightsailCodeDeployUsers:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: LightsailCodeDeployUsers
+      Policies:
+        - PolicyName: CodeDepoyLightsailPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                  - s3:List*
+                Resource:
+                  - Fn::Sub: arn:aws:s3:::${BucketName}/*
+                  - arn:aws:s3:::aws-codedeploy-us-east-2/*
+                  - arn:aws:s3:::aws-codedeploy-us-east-1/*
+                  - arn:aws:s3:::aws-codedeploy-us-west-1/*
+                  - arn:aws:s3:::aws-codedeploy-us-west-2/*
+                  - arn:aws:s3:::aws-codedeploy-ca-central-1/*
+                  - arn:aws:s3:::aws-codedeploy-eu-west-1/*
+                  - arn:aws:s3:::aws-codedeploy-eu-west-2/*
+                  - arn:aws:s3:::aws-codedeploy-eu-west-3/*
+                  - arn:aws:s3:::aws-codedeploy-eu-central-1/*
+                  - arn:aws:s3:::aws-codedeploy-ap-east-1/*
+                  - arn:aws:s3:::aws-codedeploy-ap-northeast-1/*
+                  - arn:aws:s3:::aws-codedeploy-ap-northeast-2/*
+                  - arn:aws:s3:::aws-codedeploy-ap-southeast-1/*
+                  - arn:aws:s3:::aws-codedeploy-ap-southeast-2/*
+                  - arn:aws:s3:::aws-codedeploy-ap-south-1/*
+                  - arn:aws:s3:::aws-codedeploy-sa-east-1/*
