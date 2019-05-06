@@ -42,7 +42,7 @@ Resources:
         DeploymentOption: WITHOUT_TRAFFIC_CONTROL
       DeploymentConfigName: CodeDeployDefault.OneAtATime
       OnPremisesInstanceTagFilters:
-        - Key: Stage
+        - Key: Environment
           Value: dev
           Type: KEY_AND_VALUE
       ServiceRoleArn:
